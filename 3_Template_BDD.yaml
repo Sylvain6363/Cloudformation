@@ -1,0 +1,59 @@
+##########################################################
+#             TEMPLATE BASE DE DONNEES                   #
+##########################################################
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Template Base de données
+
+Resources:
+
+###########################################
+#  CREATION DES BASES DE DONNEES MULTIAZ  #
+#          ET DE LEUR GROUPE              #
+###########################################
+  # Creation d'une instance RDS
+  DB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBSubnetGroupName: !Ref DBGroup
+      Engine: MySQL
+      AutoMinorVersionUpgrade: true
+      BackupRetentionPeriod: 7
+      PubliclyAccessible: false
+      MasterUsername: wordpress
+      MasterUserPassword: motdepasse
+      DBName: WordPress
+      DBInstanceClass: db.t2.micro
+      AllocatedStorage: 5
+      MultiAZ: true
+      VPCSecurityGroups: 
+        - !ImportValue
+            Fn::Sub: RDSSecurityGroup
+      Tags:
+        - Key: Name
+          Value: Wordpress Database
+
+  DBGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+        DBSubnetGroupDescription: RDS Subnet
+        DBSubnetGroupName: RDS Subnet
+        SubnetIds:
+          - !ImportValue 
+              Fn::Sub: SubnetPrivateA
+          - !ImportValue 
+              Fn::Sub: SubnetPrivateB 
+           
+#################################################
+#                    EXPORTS                    #
+#################################################
+Outputs:
+
+  DBAddress:
+    Description: address of database endpoint
+    Value:
+      Fn::GetAtt:
+      - DB
+      - Endpoint.Address
+    Export:
+      Name: DBAddress
