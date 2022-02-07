@@ -3,9 +3,10 @@
 ## Description
 
 Créer une infrastructure sur le Cloud d'AWS
+
 Cette infrastructure comprendra :
-     la partie web hautement disponible, disposant d'un elastic load balancer, de 2 instances ec2 incluant docker et wordpress, et d'une instance RDS multiAZ
-     la seconde partie, un réseau privé contenant un intranet et une passerelle VPN accessible uniquement depuis un site local via un serveur VPN
+- la partie web hautement disponible, disposant d'un elastic load balancer, de 2 instances ec2 incluant docker et wordpress, et d'une instance RDS multiAZ
+- la seconde partie, un réseau privé contenant un intranet et une passerelle VPN accessible uniquement depuis un site local via un serveur VPN
 
 ![image](https://github.com/Sylvain6363/Cloudformation/blob/main/Infrastructurecloud.png)
 
