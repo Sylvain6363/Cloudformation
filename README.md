@@ -20,7 +20,7 @@ Avoir un compte AWS
 - Créer sur le serveur VPN, une liste de révocation, le certificat d'autorité, la clé tls-crypt, la clé publique, la clé privée, la clé diffie-hellman et la clé secrète du serveur
 - Remplacer les clés de la configuration client dans la stack"4_Template_Systeme.yaml" avec les votres
 - Insérer les 4 stacks, l'un après l'autre depuis Cloudformation sur AWS
-
+- Démarrer le service openvpn sur le serveur et le client (ex: systemctl start openvpn@server..)
 
 ## Auteur
 
