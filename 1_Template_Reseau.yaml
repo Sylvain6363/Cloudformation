@@ -1,0 +1,334 @@
+##########################################################
+#                   TEMPLATE RESEAU                      #
+##########################################################
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Template Réseau
+  
+Resources:
+
+#################################################
+#        CREATION DU RESEAU PRINCIPAL           #
+#        ET DE SA PASSERELLE INTERNET           #
+#################################################
+# Creation du VPC 
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: VPC
+
+# Creation du la passerelle internet
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties: 
+      Tags:
+        - Key: Name
+          Value: InternetGateway
+
+# Attacher cette passerelle internet au VPC
+  AttachInternetGateway:
+    DependsOn: InternetGateway
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+##############################################
+#         Creation d'une Elastic IP          #
+#          et d'une passerelle NAT           #
+#      associée au sous reseau public C      #
+############################################## 
+  NatEip:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatEip.AllocationId
+      SubnetId: !Ref SubnetPublicC
+      Tags:
+        - Key: Name
+          Value: NatGateway 
+
+#############################################
+#       SOUS-RESEAUX PUBLIC ET PRIVE A      #
+#     AVEC LA TABLE DE ROUTAGE PUBLIC A     #
+#          LE RATTACHEMENT PUBLIC A         #
+#            LA ROUTE PUBLIC A              #
+#############################################
+# Creation du sous-reseau public A
+  SubnetPublicA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: eu-west-3a
+      CidrBlock: 10.0.10.0/24
+      Tags:
+        - Key: Name
+          Value: Subnet-Public-A
+# Creation de la table de routage du sous-reseau public A  
+  PublicRouteTableA:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Public-Route-Table-A
+# Creation de l'association de la table de routage A au sous-reseau public A
+  AttachPublicRouteTableA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTableA
+      SubnetId: !Ref SubnetPublicA
+# Creation d'une route a destination de toutes les adresses 
+# en utilisant la passerelle internet et la table de routage public A 
+  PublicRouteA:
+    Type: AWS::EC2::Route
+    Properties: 
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref PublicRouteTableA
+# Creation du sous-reseau prive A
+  SubnetPrivateA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: eu-west-3a
+      CidrBlock: 10.0.20.0/24
+      Tags:
+        - Key: Name
+          Value: Subnet-Private-A
+      VpcId: !Ref VPC
+# Creation de la table de routage du sous-reseau prive A  
+  PrivateRouteTableA:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Private-Route-Table-A
+# Creation de l'association de la table de routage A au sous-reseau private A
+  AttachPrivateRouteTableA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableA
+      SubnetId: !Ref SubnetPrivateA
+
+#############################################
+#       SOUS-RESEAUX PUBLIC ET PRIVE B      #
+#     AVEC LA TABLE DE ROUTAGE PUBLIC B     #
+#          LE RATTACHEMENT PUBLIC B         #
+#            LA ROUTE PUBLIC B              #
+#############################################
+# Creation du sous-reseau public B
+  SubnetPublicB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: eu-west-3b
+      CidrBlock: 10.0.100.0/24
+      Tags:
+        - Key: Name
+          Value: Subnet-Public-B
+# Creation de la table de routage du sous-reseau public B  
+  PublicRouteTableB:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Public-Route-Table-B
+# Creation de l'association de la table de routage B au sous-reseau public B
+  AttachPublicRouteTableB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTableB
+      SubnetId: !Ref SubnetPublicB
+# Creation d'une route a destination de toutes les adresses 
+# en utilisant la passerelle internet et la table de routage public B
+  PublicRouteB:
+    DependsOn: InternetGateway
+    Type: AWS::EC2::Route
+    Properties: 
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref PublicRouteTableB
+# Creation du sous-reseau prive B
+  SubnetPrivateB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: eu-west-3b
+      CidrBlock: 10.0.200.0/24
+      Tags:
+        - Key: Name
+          Value: Subnet-Private-B
+      
+# Creation de la table de routage du sous-reseau prive B  
+  PrivateRouteTableB:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Private-Route-Table-B
+# Creation de l'association de la table de routage B au sous-reseau private B
+  AttachPrivateRouteTableB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableB
+      SubnetId: !Ref SubnetPrivateB
+
+##############################################
+#           SOUS-RESEAUX PUBLIC C            #
+#     AVEC LA TABLE DE ROUTAGE PUBLIC C      #
+#          LE RATTACHEMENT PUBLIC C          #
+#            LA ROUTE PUBLIC C               #
+##############################################
+# Creation du sous-reseau public C
+  SubnetPublicC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: eu-west-3c
+      CidrBlock: 10.0.60.0/24
+      Tags:
+        - Key: Name
+          Value: Subnet-Public-C
+# Creation de la table de routage du sous-resau public C
+  PublicRouteTableC:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Public-Route-Table-C
+# Creation de l'association de la table de routage C au sous-reseau public C
+  AttachPublicRouteTableC:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTableC
+      SubnetId: !Ref SubnetPublicC
+# Creation d'une route a destination de toutes les adresses 
+# en utilisant la passerelle internet et la table de routage public C  
+  PublicRouteC:
+    DependsOn: InternetGateway
+    Type: AWS::EC2::Route
+    Properties: 
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref PublicRouteTableC
+
+#############################################
+#           SOUS-RESEAUX PRIVE C            #
+#     AVEC LA TABLE DE ROUTAGE PRIVE C      #
+#          LE RATTACHEMENT PRIVE C          #
+#            LA ROUTE PRIVE C               #
+#############################################
+# Creation du sous-reseau prive C
+  SubnetPrivateC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: eu-west-3c
+      CidrBlock: 10.0.50.0/24
+      Tags:
+        - Key: Name
+          Value: Subnet-Private-C
+# Creation de la table de routage du sous-resau prive C
+  PrivateRouteTableC:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Private-Route-Table-C
+# Creation de l'association de la table de routage C au sous-reseau prive C
+  AttachPrivateRouteTableC:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableC
+      SubnetId: !Ref SubnetPrivateC
+# Creation d'une route a destination de toutes les adresses 
+# en utilisant la passerelle internet et la table de routage privee C  
+  PrivateRouteC:
+    Type: AWS::EC2::Route
+    DependsOn: NatGateway
+    Properties: 
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+      RouteTableId: !Ref PrivateRouteTableC
+
+#################################################
+#                    EXPORTS                    #
+#################################################
+Outputs:
+
+  VPC:
+    Description: VPC
+    Value: !Ref VPC
+    Export:
+      Name: VPC
+
+  SubnetPublicA:
+    Description: Subnet-Public-A
+    Value: !Ref SubnetPublicA
+    Export:
+      Name: SubnetPublicA
+
+  SubnetPublicB:
+    Description: Subnet-Public-B
+    Value: !Ref SubnetPublicB
+    Export:
+      Name: SubnetPublicB
+
+  SubnetPublicC:
+    Description: Subnet-Public-C
+    Value: !Ref SubnetPublicC
+    Export:
+      Name: SubnetPublicC
+
+  SubnetPrivateA:
+    Description: Subnet-Private-A
+    Value: !Ref SubnetPrivateA
+    Export:
+      Name: SubnetPrivateA
+
+  SubnetPrivateB:
+    Description: Subnet-Private-B
+    Value: !Ref SubnetPrivateB
+    Export:
+      Name: SubnetPrivateB
+
+  SubnetPrivateC:
+    Description: Subnet-Private-C
+    Value: !Ref SubnetPrivateC
+    Export:
+      Name: SubnetPrivateC
+
+  InternetGateway:
+    Description: Passerelle Internet
+    Value: !Ref InternetGateway
+    Export:
+      Name: InternetGateway
+
+  NatEip:
+    Description: IP Elastic pour la NAT
+    Value: !Ref NatEip
+    Export:
+      Name: NatEip
+
+  NatGateway:
+    Description: Passerelle NAT
+    Value: !Ref NatGateway
+    Export:
+      Name: NatGateway
+
+  PrivateRouteTableC:
+    Description: Table de routage reseau public C
+    Value: !Ref PrivateRouteTableC
+    Export:
+      Name: PrivateRouteTableC
