@@ -148,7 +148,7 @@ Resources:
             echo "Donner les droits d'execution à wp-cli : Ok " >> /var/log/install.txt
             mv wp-cli.phar /usr/local/bin/wp
             echo "Déplacer le wp-cli : Ok " >> /var/log/install.txt
-            wp core install --url="$loadbalancerdnsname" --title="SiteWebdeSylvain" --admin_user=sylvain --admin_password=motdepasse --admin_email="vigier.sylvain@yahoo.fr" --allow-root
+            wp core install --url="$loadbalancerdnsname" --title="SiteWebdeSylvain" --admin_user=sylvain --admin_password=motdepasse --admin_email="monemail@yahoo.fr" --allow-root
             echo "Wp-cli installe wordpress : Ok " >> /var/log/install.txt
             sleep 10
             wp plugin install amazon-s3-and-cloudfront --allow-root
@@ -373,7 +373,7 @@ Resources:
     Properties:
       DisplayName: AlerteInfraWeb
       Subscription:
-        - Endpoint: vigier.sylvain@yahoo.fr
+        - Endpoint: monemail@yahoo.fr
           Protocol: email
       TopicName: AlerteInfraWeb
 
